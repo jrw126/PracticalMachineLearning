@@ -1,0 +1,12 @@
+---
+title: "Practical Machine Learning Project"
+author: "John Wright"
+date: "Sunday, November 09, 2014"
+output: html_document
+---
+
+# Load data
+```{r}
+train <- read.csv("pml-training.csv")
+test <- read.csv("pml-testing.csv")
+```
