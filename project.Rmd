@@ -5,8 +5,22 @@ date: "Sunday, November 09, 2014"
 output: html_document
 ---
 
-# Load data
+# Load data and libraries
 ```{r}
+library(corrgram)
+
 train <- read.csv("pml-training.csv")
 test <- read.csv("pml-testing.csv")
+```
+
+# Data Documentation
+http://groupware.les.inf.puc-rio.br/har
+
+# Feature Analysis and Selection
+```{r}
+head(train)
+
+sapply(LETTERS[1:5], FUN = function(x) summary(train$var_yaw_forearm[train$classe == x]))
+
+sapply(LETTERS[1:5], FUN = function(x) summary(train$roll_belt[train$classe == x]))
 ```
