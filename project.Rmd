@@ -30,8 +30,18 @@ idx <- setdiff(which(!sapply(1:ncol(test), function(x) sum(is.na(test[, x])) == 
 train <- train[, idx]
 test <- test[, idx]
 
-# Make sure the data types between the training and test sets match.
-which(!sapply(train,class) == sapply(test,class))
+# Check if there are any mismatched data types.
+t <- which(!sapply(train, class) == sapply(test, class))
+t
+
+# Convert the types that don't match
+test[, t[1:3]] <- lapply(test[, t[1:3]], as.numeric)
+test$problem_id <- factor(test$problem_id)
+
+# Split the training and testing sets
+inTrain <- createDataPartition(train$classe, p = 3/4, list = FALSE)
+training <- train[inTrain, ]
+testing <- train[-inTrain, ]
 
 qplot(1:nrow(train), train$pitch_belt, color = train$classe)
 ```
@@ -39,19 +49,46 @@ qplot(1:nrow(train), train$pitch_belt, color = train$classe)
 This data set has lots of numeric variables that may contain nearly the same information as far as prediction is concerned. To isolate these variables, some correlation analysis is performed. First, a correlogram is generated to confirm that there are in fact some highly correlated values. The darkly shaded boxes in the plot confirm that this is true.
 ```{r}
 # Generate correlogram
-corrgram(train[, idx], lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram")
+corrgram(training[, idx], lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
 
 # Identify the correlated data. Non-numeric columns are ignored.
-M <- abs(cor(train[, sapply(train, is.numeric)]))
-diag(M) <- 0 
+M <- abs(cor(training[, sapply(training, is.numeric)]))
+diag(M) <- 0 # Ignore correlation of variables with itself.
 M <- which(M > 0.8, arr.ind = T)
 
-fit <- randomForest(classe ~ ., data = train)
-pred <- predict(fit, test)
-confusionMatrix(testing$problem_id, pred)
-
-length(unique(row.names(M))) / nrow(M) * 100
-
+# Return the amount of highly correlated numeric variables
+nrow(M)
 ```
+
+# Model Selection
+The first model is a K nearest neighbors model using the numeric data from the training set after it has been preprocessed using principal components analysis.
+```{r}
+# Perform PCA preprocessing on all numeric variables
+pp <- preProcess(training[, sapply(training, is.numeric)], method = "pca")
+m1_PC <- predict(pp, training[, sapply(training, is.numeric)])
+
+# Fit a model using K nearest neighbors
+m1_fit <- train(training$classe ~ ., method = "knn", data = m1_PC)
+
+# Predict the test data values
+m1_pred <- predict(pp, testing[, sapply(testing, is.numeric)])
+problem_id <- predict(m1_fit, m1_pred)
+
+# Evaluate the model
+confusionMatrix(problem_id, testing$classe)
+```
+
+The second model is a random forest using all variables.
+```{r}
+# Fit the model
+m2_fit <- randomForest(classe ~ ., data = training)
+
+# Predict the test data
+m2_pred <- predict(m2_fit, testing)
+
+# Evaluate the model
+confusionMatrix(m2_pred, testing$classe)
+```
+
 
 
