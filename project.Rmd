@@ -63,6 +63,9 @@ nrow(M)
 # Model Selection
 The first model is a K nearest neighbors model using the numeric data from the training set after it has been preprocessed using principal components analysis.
 ```{r}
+# Set seed
+set.seed(123)
+
 # Perform PCA preprocessing on all numeric variables
 pp <- preProcess(training[, sapply(training, is.numeric)], method = "pca")
 m1_PC <- predict(pp, training[, sapply(training, is.numeric)])
@@ -90,5 +93,6 @@ m2_pred <- predict(m2_fit, testing)
 confusionMatrix(m2_pred, testing$classe)
 ```
 
+Perhaps unsurprisingly, the random forest model that does not ignore the factor variables like the first model that used PCA performs slightly better. The random forest model will be used to classify the data in the final test set.
 
 
