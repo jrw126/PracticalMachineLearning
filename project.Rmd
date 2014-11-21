@@ -11,6 +11,7 @@ library(caret)
 library(corrgram)
 library(Hmisc)
 library(randomForest)
+library(ggplot2)
 
 train <- read.csv("pml-training.csv")
 test <- read.csv("pml-testing.csv")
@@ -19,13 +20,13 @@ test <- read.csv("pml-testing.csv")
 ## Data Documentation
 http://groupware.les.inf.puc-rio.br/har
 
-# Data Cleaning and Feature Selection
+# Data Cleaning
 Taking a quick visual glance at the train and test sets, it looks like there are many variables in the training set where most of the values are missing and several variables in the test set where _ALL_ of the values are missing. It doesn't make much sense to use a variable to train a model if it won't have any corresponding values in the testing set, so these columns should be identified and removed.
 
-Additionally, since we want this model to be generalizable, it doesn't make sense to use the participant's name as a feature. Perhaps not everyone who's weightlifting performance want to predict is named `r unique(train$user_name)`. Similar logic can be applied to the timestamps and the variable "X", which appears to be a row number.
+Additionally, since we want this model to be generalizable, it doesn't make sense to use the participant's name as a feature. Perhaps not everyone who's weightlifting performance want to predict is named `r unique(train$user_name)`. Similar logic can be applied to the timestamps, the variable `X` which appears to be a row number, and the `new_window` and `num_window` variables which also appear to be metadata.
 ```{r}
 # Column indices of columns that aren't all NA. Also ignores the first 5 columns.
-idx <- setdiff(which(!sapply(1:ncol(test), function(x) sum(is.na(test[, x])) == nrow(test))), 1:5)
+idx <- setdiff(which(!sapply(1:ncol(test), function(x) sum(is.na(test[, x])) == nrow(test))), 1:7)
 
 train <- train[, idx]
 test <- test[, idx]
@@ -46,7 +47,8 @@ testing <- train[-inTrain, ]
 qplot(1:nrow(train), train$pitch_belt, color = train$classe)
 ```
 
-This data set has lots of numeric variables that may contain nearly the same information as far as prediction is concerned. To isolate these variables, some correlation analysis is performed. First, a correlogram is generated to confirm that there are in fact some highly correlated values. The darkly shaded boxes in the plot confirm that this is true.
+# Exploratory Analysis
+Often times, data sets will contain variables that are highly correlated and may contain the same or similar information. To investigate if this scenario is occuring with this data, some correlation analysis is performed. First, a correlogram is generated to visually identify if there are any highly correlated variables. Darkly shaded boxes confirm the presence of variables that are higly correlated with each other.
 ```{r}
 # Generate correlogram
 corrgram(training[, idx], lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
