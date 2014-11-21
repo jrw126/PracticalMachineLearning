@@ -51,7 +51,7 @@ qplot(1:nrow(train), train$pitch_belt, color = train$classe)
 Often times, data sets will contain variables that are highly correlated and may contain the same or similar information. To investigate if this scenario is occuring with this data, some correlation analysis is performed. First, a correlogram is generated to visually identify if there are any highly correlated variables. Darkly shaded boxes confirm the presence of variables that are higly correlated with each other.
 ```{r}
 # Generate correlogram
-corrgram(training[, idx], lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
+corrgram(training, lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
 
 # Identify the correlated data. Non-numeric columns are ignored.
 M <- abs(cor(training[, sapply(training, is.numeric)]))
@@ -72,7 +72,7 @@ set.seed(123)
 pp <- preProcess(training[, sapply(training, is.numeric)], method = "pca")
 m1_PC <- predict(pp, training[, sapply(training, is.numeric)])
 
-# Fit a model using K nearest neighbors
+# Fit a model using K nearest neighbors on the preprocessed data.
 m1_fit <- train(training$classe ~ ., method = "knn", data = m1_PC)
 
 # Predict the test data values
@@ -93,8 +93,14 @@ m2_pred <- predict(m2_fit, testing)
 
 # Evaluate the model
 confusionMatrix(m2_pred, testing$classe)
+
+plot(m2_fit)
 ```
 
 Perhaps unsurprisingly, the random forest model that does not ignore the factor variables like the first model that used PCA performs slightly better. The random forest model will be used to classify the data in the final test set.
 
+See which variables are the most important
+```{r}
+data.frame(names(training)[order(-varImp(m2_fit))])
+```
 
