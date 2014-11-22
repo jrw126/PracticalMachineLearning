@@ -118,7 +118,7 @@ M &lt;- which(M &gt; 0.8, arr.ind = T)
 
 # Return the amount of highly correlated numeric variables
 nrow(M)</code></pre>
-<pre><code>## [1] 42</code></pre>
+<pre><code>## [1] 30</code></pre>
 </div>
 <div id="model-selection-cross-validation" class="section level1">
 <h1>Model Selection &amp; Cross-Validation</h1>
@@ -143,33 +143,33 @@ confusionMatrix(problem_id, cv$classe)</code></pre>
 ## 
 ##           Reference
 ## Prediction   A   B   C   D   E
-##          A 769  14   2   0   1
-##          B   2 524   7   0   0
-##          C   3  10 450  18   7
-##          D   1   4   7 433   4
-##          E   0   2   1   1 506
+##          A 788   9   1   0   0
+##          B   2 501   8   0   2
+##          C   4   8 476  20   1
+##          D   2   0   5 438   1
+##          E   1   2   1   0 481
 ## 
 ## Overall Statistics
 ##                                         
-##                Accuracy : 0.97          
-##                  95% CI : (0.963, 0.976)
-##     No Information Rate : 0.28          
-##     P-Value [Acc &gt; NIR] : &lt; 2e-16       
+##                Accuracy : 0.976         
+##                  95% CI : (0.969, 0.981)
+##     No Information Rate : 0.29          
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
 ##                                         
-##                   Kappa : 0.962         
-##  Mcnemar's Test P-Value : 0.00131       
+##                   Kappa : 0.969         
+##  Mcnemar's Test P-Value : NA            
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity             0.992    0.946    0.964    0.958    0.977
-## Specificity             0.991    0.996    0.983    0.993    0.998
-## Pos Pred Value          0.978    0.983    0.922    0.964    0.992
-## Neg Pred Value          0.997    0.987    0.993    0.992    0.995
-## Prevalence              0.280    0.200    0.169    0.163    0.187
-## Detection Rate          0.278    0.189    0.163    0.157    0.183
-## Detection Prevalence    0.284    0.193    0.176    0.162    0.184
-## Balanced Accuracy       0.992    0.971    0.974    0.976    0.988</code></pre>
+## Sensitivity             0.989    0.963    0.969    0.956    0.992
+## Specificity             0.995    0.995    0.985    0.997    0.998
+## Pos Pred Value          0.987    0.977    0.935    0.982    0.992
+## Neg Pred Value          0.995    0.992    0.993    0.991    0.998
+## Prevalence              0.290    0.189    0.178    0.166    0.176
+## Detection Rate          0.286    0.182    0.173    0.159    0.175
+## Detection Prevalence    0.290    0.186    0.185    0.162    0.176
+## Balanced Accuracy       0.992    0.979    0.977    0.976    0.995</code></pre>
 <p>The second model is a random forest using all variables with no preprocessing.</p>
 <pre class="r"><code># Fit the model
 m2_fit &lt;- randomForest(classe ~ ., data = training)
@@ -183,17 +183,17 @@ confusionMatrix(m2_pred_cv, cv$classe)</code></pre>
 ## 
 ##           Reference
 ## Prediction   A   B   C   D   E
-##          A 775   0   0   0   0
-##          B   0 554   0   0   0
-##          C   0   0 467   0   0
-##          D   0   0   0 452   0
-##          E   0   0   0   0 518
+##          A 797   0   0   0   0
+##          B   0 520   0   0   0
+##          C   0   0 491   0   0
+##          D   0   0   0 458   0
+##          E   0   0   0   0 485
 ## 
 ## Overall Statistics
 ##                                     
 ##                Accuracy : 1         
 ##                  95% CI : (0.999, 1)
-##     No Information Rate : 0.28      
+##     No Information Rate : 0.29      
 ##     P-Value [Acc &gt; NIR] : &lt;2e-16    
 ##                                     
 ##                   Kappa : 1         
@@ -202,14 +202,14 @@ confusionMatrix(m2_pred_cv, cv$classe)</code></pre>
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity              1.00      1.0    1.000    1.000    1.000
-## Specificity              1.00      1.0    1.000    1.000    1.000
-## Pos Pred Value           1.00      1.0    1.000    1.000    1.000
-## Neg Pred Value           1.00      1.0    1.000    1.000    1.000
-## Prevalence               0.28      0.2    0.169    0.163    0.187
-## Detection Rate           0.28      0.2    0.169    0.163    0.187
-## Detection Prevalence     0.28      0.2    0.169    0.163    0.187
-## Balanced Accuracy        1.00      1.0    1.000    1.000    1.000</code></pre>
+## Sensitivity              1.00    1.000    1.000    1.000    1.000
+## Specificity              1.00    1.000    1.000    1.000    1.000
+## Pos Pred Value           1.00    1.000    1.000    1.000    1.000
+## Neg Pred Value           1.00    1.000    1.000    1.000    1.000
+## Prevalence               0.29    0.189    0.178    0.166    0.176
+## Detection Rate           0.29    0.189    0.178    0.166    0.176
+## Detection Prevalence     0.29    0.189    0.178    0.166    0.176
+## Balanced Accuracy        1.00    1.000    1.000    1.000    1.000</code></pre>
 <pre class="r"><code># Show the error rate against the number of trees for the model.
 png(filename = &quot;rf_fit.png&quot;, width = 480, height = 480, units = &quot;px&quot;)
 plot(m2_fit)
@@ -226,34 +226,34 @@ confusionMatrix(m2_pred_test, testing$classe)</code></pre>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1393   10    0    0    0
-##          B    0  938    7    0    0
-##          C    2    1  845    7    2
-##          D    0    0    3  796    0
-##          E    0    0    0    1  899
+##          A 1395    5    0    0    2
+##          B    0  942    4    0    0
+##          C    0    2  850    6    2
+##          D    0    0    1  798    9
+##          E    0    0    0    0  888
 ## 
 ## Overall Statistics
 ##                                         
-##                Accuracy : 0.993         
-##                  95% CI : (0.991, 0.995)
+##                Accuracy : 0.994         
+##                  95% CI : (0.991, 0.996)
 ##     No Information Rate : 0.284         
 ##     P-Value [Acc &gt; NIR] : &lt;2e-16        
 ##                                         
-##                   Kappa : 0.991         
+##                   Kappa : 0.992         
 ##  Mcnemar's Test P-Value : NA            
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity             0.999    0.988    0.988    0.990    0.998
-## Specificity             0.997    0.998    0.997    0.999    1.000
-## Pos Pred Value          0.993    0.993    0.986    0.996    0.999
-## Neg Pred Value          0.999    0.997    0.998    0.998    1.000
+## Sensitivity             1.000    0.993    0.994    0.993    0.986
+## Specificity             0.998    0.999    0.998    0.998    1.000
+## Pos Pred Value          0.995    0.996    0.988    0.988    1.000
+## Neg Pred Value          1.000    0.998    0.999    0.999    0.997
 ## Prevalence              0.284    0.194    0.174    0.164    0.184
-## Detection Rate          0.284    0.191    0.172    0.162    0.183
-## Detection Prevalence    0.286    0.193    0.175    0.163    0.184
-## Balanced Accuracy       0.998    0.993    0.993    0.995    0.999</code></pre>
-<p>An error rate of 99.3271% isn’t quite as good as 100%, but I’ll take it! The random forest model will be used to make the predictions for the project submission.</p>
+## Detection Rate          0.284    0.192    0.173    0.163    0.181
+## Detection Prevalence    0.286    0.193    0.175    0.165    0.181
+## Balanced Accuracy       0.999    0.996    0.996    0.995    0.993</code></pre>
+<p>An accuracy rate of 99.2% isn’t quite as good as 100%, but I’ll take it! The random forest model will be used to make the predictions for the project submission.</p>
 <p>To understand which variables are contributing the most predictive value to the model, print a plot of variable importance:</p>
 <pre class="r"><code>png(filename = &quot;varimp.png&quot;, width = 480, height = 480, units = &quot;px&quot;)
 varImpPlot(m2_fit)

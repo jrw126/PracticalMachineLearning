@@ -113,7 +113,7 @@ m2_pred_test <- predict(m2_fit, testing)
 # Evaluate the model
 confusionMatrix(m2_pred_test, testing$classe)
 ```
-An error rate of `r confusionMatrix(m2_pred_test, testing$classe)$overall[1] * 100`% isn't quite as good as 100%, but I'll take it! The random forest model will be used to make the predictions for the project submission.
+An accuracy rate of 99.2% isn't quite as good as 100%, but I'll take it! The random forest model will be used to make the predictions for the project submission.
 
 To understand which variables are contributing the most predictive value to the model, print a plot of variable importance:
 ```{r, warning=FALSE, message=FALSE}
@@ -123,7 +123,7 @@ dev.off()
 ```
 
 Print the answers for the project submission
-```{r}
+```{r, eval=FALSE}
 submission <- predict(m2_fit, test)
 
 pml_write_files <- function(x) {
