@@ -6,26 +6,24 @@ output: html_document
 ---
 
 # Load data and libraries
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(caret)
 library(corrgram)
-library(Hmisc)
 library(randomForest)
-library(ggplot2)
+
+# The data can be found here:
+# http://groupware.les.inf.puc-rio.br/har
 
 train <- read.csv("pml-training.csv")
 test <- read.csv("pml-testing.csv")
 ```
 
-## Data Documentation
-http://groupware.les.inf.puc-rio.br/har
-
 # Data Cleaning
 Taking a quick visual glance at the train and test sets, it looks like there are many variables in the training set where most of the values are missing and several variables in the test set where _ALL_ of the values are missing. It doesn't make much sense to use a variable to train a model if it won't have any corresponding values in the testing set, so these columns should be identified and removed.
 
-Additionally, since we want this model to be generalizable, it doesn't make sense to use the participant's name as a feature. Perhaps not everyone who's weightlifting performance want to predict is named `r unique(train$user_name)`. Similar logic can be applied to the timestamps, the variable `X` which appears to be a row number, and the `new_window` and `num_window` variables which also appear to be metadata.
+Additionally, since we want this model to be generalizable, it doesn't make sense to use the participant's name as a feature. Perhaps not everyone who's weightlifting performance want to predict is named `r unique(train$user_name)`. Similar logic can be applied to the time stamps, the variable `X` which appears to be a row number, and the `new_window` and `num_window` variables which also appear to be metadata.
 ```{r}
-# Column indices of columns that aren't all NA. Also ignores the first 5 columns.
+# Column indices of columns that aren't all NA. Also ignores the first 7 columns as discussed above.
 idx <- setdiff(which(!sapply(1:ncol(test), function(x) sum(is.na(test[, x])) == nrow(test))), 1:7)
 
 train <- train[, idx]
@@ -44,11 +42,14 @@ inTrain <- createDataPartition(train$classe, p = 3/4, list = FALSE)
 training <- train[inTrain, ]
 testing <- train[-inTrain, ]
 
-qplot(1:nrow(train), train$pitch_belt, color = train$classe)
+# Create cross-validation set
+inTrain <- createDataPartition(training$classe, p = 3/4, list = FALSE)
+training <- training[inTrain, ]
+cv <- training[-inTrain, ]
 ```
 
 # Exploratory Analysis
-Often times, data sets will contain variables that are highly correlated and may contain the same or similar information. To investigate if this scenario is occuring with this data, some correlation analysis is performed. First, a correlogram is generated to visually identify if there are any highly correlated variables. Darkly shaded boxes confirm the presence of variables that are higly correlated with each other.
+Often times, data sets will contain variables that are highly correlated and may contain the same or similar information. Highly correlated variables can be consolidated using PCA preprocessing. To investigate if this scenario is occurring with this data, some correlation analysis is performed. First, a correlogram is generated to visually identify if there are any highly correlated variables. Darkly shaded boxes confirm the presence of variables that are highly correlated/uncorrelated with each other.
 ```{r}
 # Generate correlogram
 corrgram(training, lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
@@ -62,7 +63,7 @@ M <- which(M > 0.8, arr.ind = T)
 nrow(M)
 ```
 
-# Model Selection
+# Model Selection & Cross-Validation
 The first model is a K nearest neighbors model using the numeric data from the training set after it has been preprocessed using principal components analysis.
 ```{r}
 # Set seed
@@ -76,31 +77,55 @@ m1_PC <- predict(pp, training[, sapply(training, is.numeric)])
 m1_fit <- train(training$classe ~ ., method = "knn", data = m1_PC)
 
 # Predict the test data values
-m1_pred <- predict(pp, testing[, sapply(testing, is.numeric)])
-problem_id <- predict(m1_fit, m1_pred)
+m1_pred_cv <- predict(pp, cv[, sapply(cv, is.numeric)])
+problem_id <- predict(m1_fit, m1_pred_cv)
 
 # Evaluate the model
-confusionMatrix(problem_id, testing$classe)
+confusionMatrix(problem_id, cv$classe)
 ```
 
-The second model is a random forest using all variables.
+The second model is a random forest using all variables with no preprocessing.
 ```{r}
 # Fit the model
 m2_fit <- randomForest(classe ~ ., data = training)
 
 # Predict the test data
-m2_pred <- predict(m2_fit, testing)
+m2_pred_cv <- predict(m2_fit, cv)
 
 # Evaluate the model
-confusionMatrix(m2_pred, testing$classe)
+confusionMatrix(m2_pred_cv, cv$classe)
 
+# Show the error rate against the number of trees for the model.
 plot(m2_fit)
 ```
 
-Perhaps unsurprisingly, the random forest model that does not ignore the factor variables like the first model that used PCA performs slightly better. The random forest model will be used to classify the data in the final test set.
-
-See which variables are the most important
+Of the two models, random forests appears to be the clear winner with an estimated out of sample error rate of 0%! Hot damn! Let's see how well it does on the testing set...
 ```{r}
-data.frame(names(training)[order(-varImp(m2_fit))])
+# Make predictions
+m2_pred_test <- predict(m2_fit, testing)
+
+# Evaluate the model
+confusionMatrix(m2_pred_test, testing$classe)
+```
+An error rate of `r confusionMatrix(m2_pred_test, testing$classe)$overall[1] * 100`% isn't quite as good as 100%, but I'll take it! The random forest model will be used to make the predictions for the project submission.
+
+To understand which variables are contributing the most predictive value to the model, print a plot of variable importance:
+```{r}
+varImpPlot(m2_fit)
+```
+
+Print the answers for the project submission
+```{r}
+submission <- predict(m2_fit, test)
+
+pml_write_files <- function(x) {
+      n = length(x)
+      for (i in 1:n) {
+            filename <- paste0("problem_id_", i, ".txt")
+            write.table(x[i], file = filename, quote = F, row.names = F, col.names = F)
+      }
+}
+
+pml_write_files(submission)
 ```
 
