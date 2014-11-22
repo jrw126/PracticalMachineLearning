@@ -50,9 +50,13 @@ cv <- training[-inTrain, ]
 
 # Exploratory Analysis
 Often times, data sets will contain variables that are highly correlated and may contain the same or similar information. Highly correlated variables can be consolidated using PCA preprocessing. To investigate if this scenario is occurring with this data, some correlation analysis is performed. First, a correlogram is generated to visually identify if there are any highly correlated variables. Darkly shaded boxes confirm the presence of variables that are highly correlated/uncorrelated with each other.
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # Generate correlogram
+dev.off()
+png(filename = "corrgram.png", width = 480, height = 480, units = "px")
 corrgram(training, lower.panel = panel.shade, upper.panel = NULL, text.panel = panel.txt, main = "Correlogram of Numeric Variables")
+dev.off()
+
 
 # Identify the correlated data. Non-numeric columns are ignored.
 M <- abs(cor(training[, sapply(training, is.numeric)]))
@@ -85,7 +89,7 @@ confusionMatrix(problem_id, cv$classe)
 ```
 
 The second model is a random forest using all variables with no preprocessing.
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # Fit the model
 m2_fit <- randomForest(classe ~ ., data = training)
 
@@ -96,7 +100,9 @@ m2_pred_cv <- predict(m2_fit, cv)
 confusionMatrix(m2_pred_cv, cv$classe)
 
 # Show the error rate against the number of trees for the model.
+png(filename = "rf_fit.png", width = 480, height = 480, units = "px")
 plot(m2_fit)
+dev.off()
 ```
 
 Of the two models, random forests appears to be the clear winner with an estimated out of sample error rate of 0%! Hot damn! Let's see how well it does on the testing set...
@@ -110,8 +116,10 @@ confusionMatrix(m2_pred_test, testing$classe)
 An error rate of `r confusionMatrix(m2_pred_test, testing$classe)$overall[1] * 100`% isn't quite as good as 100%, but I'll take it! The random forest model will be used to make the predictions for the project submission.
 
 To understand which variables are contributing the most predictive value to the model, print a plot of variable importance:
-```{r}
+```{r, warning=FALSE, message=FALSE}
+png(filename = "varimp.png", width = 480, height = 480, units = "px")
 varImpPlot(m2_fit)
+dev.off()
 ```
 
 Print the answers for the project submission
